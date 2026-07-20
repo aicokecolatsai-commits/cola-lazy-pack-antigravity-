@@ -1,0 +1,21 @@
+# 排除本地產生的設定檔與敏感資訊
+mcp_config.json
+.env
+.env.*
+!.env.example
+
+# 排除暫存目錄
+temp/
+tmp/
+setup_temp/
+
+# 排除套件與虛擬環境
+node_modules/
+.venv/
+venv/
+__pycache__/
+
+# 排除 OS 系統檔案
+Thumbs.db
+desktop.ini
+.DS_Store
