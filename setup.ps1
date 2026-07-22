@@ -1,4 +1,4 @@
-﻿# Antigravity 專屬環境懶人包安裝與設定腳本 (Cola Lazy Pack)
+# Antigravity 專屬環境懶人包安裝與設定腳本 (Cola Lazy Pack)
 # 支援功能：Git, GitHub CLI, Node.js, uv, Playwright, Firecrawl, Firebase, Obsidian MCP, 技能下載與 mcp_config.json 安全生成
 
 [CmdletBinding()]
@@ -146,9 +146,48 @@ if (-not (Test-Path $brainstormingSkillsPath)) {
 # 3.2 安裝 UI-UX Pro Max Skill (從 https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 $uiUxPluginPath = "$pluginsDir\ui-ux-pro-max"
 Write-Info "正在設定 ui-ux-pro-max skill..."
+
+function Configure-UiUxPluginForAntigravity {
+    param (
+        [string]$pluginPath
+    )
+    $targetSkillsPath = "$pluginPath\skills\ui-ux-pro-max"
+    $sourceSkillsPath = "$pluginPath\.claude\skills\ui-ux-pro-max"
+    
+    if (Test-Path $sourceSkillsPath) {
+        Write-Info "正在配置 ui-ux-pro-max 為 Antigravity 相容格式..."
+        
+        # 建立 skills 目錄
+        if (-not (Test-Path $targetSkillsPath)) {
+            New-Item -ItemType Directory -Path $targetSkillsPath -Force | Out-Null
+        }
+        
+        # 複製技能內容
+        Copy-Item -Path "$sourceSkillsPath\*" -Destination $targetSkillsPath -Recurse -Force | Out-Null
+        
+        # 建立 plugin.json
+        $pluginJsonContent = @"
+{
+  "name": "ui-ux-pro-max",
+  "version": "2.11.0",
+  "description": "AI-powered design intelligence with 84 UI styles, 161 color palettes, 73 font pairings, 99 UX guidelines, and 25 chart types across 17 tech stacks.",
+  "author": {
+    "name": "NextLevelBuilder"
+  },
+  "license": "MIT"
+}
+"@
+        Set-Content -Path "$pluginPath\plugin.json" -Value $pluginJsonContent -Encoding utf8
+        Write-Success "ui-ux-pro-max Antigravity 相容格式配置完成！"
+    } else {
+        Write-Warning "未找到 ui-ux-pro-max 的 .claude/skills/ui-ux-pro-max 來源目錄，無法進行 Antigravity 配置。"
+    }
+}
+
 if (-not (Test-Path $uiUxPluginPath)) {
     git clone https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git $uiUxPluginPath
-    Write-Success "ui-ux-pro-max skill 安裝成功！"
+    Configure-UiUxPluginForAntigravity $uiUxPluginPath
+    Write-Success "ui-ux-pro-max skill 安裝與配置成功！"
 } else {
     # 檢查是否為 Git 專案
     $isGit = $false
@@ -165,7 +204,8 @@ if (-not (Test-Path $uiUxPluginPath)) {
         Write-Info "偵測到 ui-ux-pro-max 不是有效的 Git 儲存庫，正在重新安裝..."
         Remove-Item -Recurse -Force $uiUxPluginPath -ErrorAction SilentlyContinue
         git clone https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git $uiUxPluginPath
-        Write-Success "ui-ux-pro-max skill 重新安裝成功！"
+        Configure-UiUxPluginForAntigravity $uiUxPluginPath
+        Write-Success "ui-ux-pro-max skill 重新安裝與配置成功！"
     } else {
         Write-Info "ui-ux-pro-max skill 已存在，正在進行更新..."
         Push-Location $uiUxPluginPath
@@ -176,7 +216,34 @@ if (-not (Test-Path $uiUxPluginPath)) {
             Write-Warning "ui-ux-pro-max skill 更新失敗，請檢查網路連線。"
         }
         Pop-Location
+        # 即使已存在也重新配置，以確保結構完整性
+        Configure-UiUxPluginForAntigravity $uiUxPluginPath
     }
+}
+
+# 3.3 安裝 Antigravity 全域技能 (00-install-all 至 06-obsidian，含專案初始化技能 05-workflow)
+$globalSkillsDir = "$configDir\skills"
+Write-Info "正在設定 Antigravity 全域技能..."
+if (-not (Test-Path $globalSkillsDir)) {
+    New-Item -ItemType Directory -Path $globalSkillsDir -Force | Out-Null
+}
+
+$localSkillsSource = "$PSScriptRoot\skills"
+if (Test-Path $localSkillsSource) {
+    Write-Info "正在將全域技能複製到: $globalSkillsDir"
+    
+    # 取得本地複製過來的 00- 至 06- 開頭的子目錄，並複製到全域技能目錄下
+    Get-ChildItem -Path $localSkillsSource -Directory | Where-Object { $_.Name -like "0*" } | ForEach-Object {
+        $destPath = "$globalSkillsDir\$($_.Name)"
+        Write-Info "正在複製技能 $($_.Name) 到 $destPath..."
+        if (-not (Test-Path $destPath)) {
+            New-Item -ItemType Directory -Path $destPath -Force | Out-Null
+        }
+        Copy-Item -Path "$($_.FullName)\*" -Destination $destPath -Recurse -Force | Out-Null
+    }
+    Write-Success "Antigravity 全域技能 (包含 05-workflow 專案初始化技能) 安裝完成！"
+} else {
+    Write-Warning "未找到本地的 skills 目錄，無法安裝全域技能。"
 }
 
 # ==========================================

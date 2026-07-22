@@ -14,6 +14,7 @@
 8. **Obsidian MCP (mcpvault)** - 連接您在 Obsidian 中的第二大腦 (ColaBrain)
 9. **Brainstorming Skill** (來自 obra/superpowers) - 輔助設計規劃的 AI Skill
 10. **UI-UX Pro Max Skill** (來自 nextlevelbuilder/ui-ux-pro-max-skill) - 前端與 UI/UX 增強技能
+11. **Antigravity 全域技能 (00-06)** - 包含開工/收工/專案初始化 (`05-workflow`) 與 Obsidian 整合說明 (`06-obsidian`)
 
 ---
 
